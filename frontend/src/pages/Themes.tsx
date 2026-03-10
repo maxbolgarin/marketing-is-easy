@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import ThemeCard from "@/components/themes/ThemeCard";
+import NewThemeDialog from "@/components/themes/NewThemeDialog";
 import { useThemes } from "@/hooks/useTheme";
 
 export default function Themes() {
   const { data, isLoading, isError } = useThemes();
   const themes = data?.items ?? [];
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -18,7 +21,7 @@ export default function Themes() {
             Manage your content themes and campaigns.
           </p>
         </div>
-        <Button size="sm" className="gap-1.5">
+        <Button size="sm" className="gap-1.5" onClick={() => setDialogOpen(true)}>
           <Plus className="size-3.5" />
           New Theme
         </Button>
@@ -43,7 +46,7 @@ export default function Themes() {
       {!isLoading && !isError && themes.length === 0 && (
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground">
           <p className="text-sm">No themes yet.</p>
-          <Button size="sm" className="gap-1.5">
+          <Button size="sm" className="gap-1.5" onClick={() => setDialogOpen(true)}>
             <Plus className="size-3.5" />
             Create your first theme
           </Button>
@@ -57,6 +60,8 @@ export default function Themes() {
           ))}
         </div>
       )}
+
+      <NewThemeDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   );
 }
