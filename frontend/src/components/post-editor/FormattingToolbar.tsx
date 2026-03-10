@@ -7,13 +7,13 @@ import type { Platform } from "@/lib/types";
 
 interface FormattingToolbarProps {
   platform: Platform | undefined;
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   value: string;
   onChange: (newValue: string) => void;
 }
 
 export function wrapSelection(
-  ref: React.RefObject<HTMLTextAreaElement>,
+  ref: React.RefObject<HTMLTextAreaElement | null>,
   prefix: string,
   suffix: string,
   onChange: (newValue: string) => void,
@@ -37,7 +37,7 @@ export function wrapSelection(
 }
 
 export function insertAtCursor(
-  ref: React.RefObject<HTMLTextAreaElement>,
+  ref: React.RefObject<HTMLTextAreaElement | null>,
   text: string,
   onChange: (newValue: string) => void,
 ) {

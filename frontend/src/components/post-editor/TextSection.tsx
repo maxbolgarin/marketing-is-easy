@@ -7,7 +7,7 @@ import { useGenerateText } from "@/hooks/useGeneration";
 import { useUpdatePost } from "@/hooks/usePost";
 import type { Platform, Post } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import FormattingToolbar, { wrapSelection } from "./FormattingToolbar";
+import FormattingToolbar from "./FormattingToolbar";
 import GenerateButton from "./GenerateButton";
 
 type TextMode = "static" | "generated";

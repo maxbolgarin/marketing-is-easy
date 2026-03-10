@@ -29,9 +29,11 @@ export default function ChannelSelector({
   return (
     <Select
       value={value ?? ""}
-      onValueChange={(channelId: string) => {
-        const channel = activeChannels.find((c) => c.id === channelId);
-        if (channel) onChange(channelId, channel);
+      onValueChange={(value) => {
+        if (value !== null) {
+          const channel = activeChannels.find((c) => c.id === value);
+          if (channel) onChange(value, channel);
+        }
       }}
     >
       <SelectTrigger className="w-full h-9">
