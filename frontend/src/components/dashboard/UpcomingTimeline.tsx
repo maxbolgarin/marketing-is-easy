@@ -1,8 +1,8 @@
 import { Clock } from "lucide-react";
 
-import { PlatformIcon } from "@/components/common/PlatformIcon";
-import { StatusBadge } from "@/components/common/StatusBadge";
-import { EmptyState } from "@/components/common/EmptyState";
+import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUpcoming } from "@/hooks/useDashboard";
 import { useEditorStore } from "@/stores/editor";

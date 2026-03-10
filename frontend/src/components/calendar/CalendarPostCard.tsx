@@ -1,5 +1,5 @@
-import { PlatformIcon } from "@/components/common/PlatformIcon";
-import { StatusDot } from "@/components/common/StatusBadge";
+import { PlatformIcon } from "@/components/shared/PlatformIcon";
+import { StatusDot } from "@/components/shared/StatusBadge";
 import { useEditorStore } from "@/stores/editor";
 import { formatTime } from "@/lib/date";
 import type { Post, Platform } from "@/lib/types";

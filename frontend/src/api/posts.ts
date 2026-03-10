@@ -30,7 +30,7 @@ export interface UpdatePostData {
   text_prompt?: string;
   media_type?: string;
   media_urls?: string[];
-  scheduled_at?: string;
+  scheduled_at?: string | null;
   status?: PostStatus;
   generation_params?: Record<string, unknown>;
 }
@@ -95,15 +95,15 @@ export function deletePost(id: string): Promise<void> {
 }
 
 export function generateText(id: string, data?: GenerateTextData): Promise<Post> {
-  return api.post<Post>(`/posts/${id}/generate/text`, data ?? {});
+  return api.post<Post>(`/posts/${id}/generate-text`, data ?? {});
 }
 
 export function generateImage(id: string, data?: GenerateImageData): Promise<Post> {
-  return api.post<Post>(`/posts/${id}/generate/image`, data ?? {});
+  return api.post<Post>(`/posts/${id}/generate-image`, data ?? {});
 }
 
 export function generateVideo(id: string): Promise<Post> {
-  return api.post<Post>(`/posts/${id}/generate/video`);
+  return api.post<Post>(`/posts/${id}/generate-video`);
 }
 
 export function approvePost(id: string, data?: ApprovePostData): Promise<Post> {
@@ -115,7 +115,7 @@ export function rejectPost(id: string): Promise<Post> {
 }
 
 export function publishNow(id: string): Promise<Post> {
-  return api.post<Post>(`/posts/${id}/publish`);
+  return api.post<Post>(`/posts/${id}/publish-now`);
 }
 
 export function getVariants(id: string): Promise<Publication[]> {

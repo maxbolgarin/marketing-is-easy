@@ -1,6 +1,6 @@
 import { format, isToday, parseISO } from "date-fns";
 
-import { StatusDot } from "@/components/common/StatusBadge";
+import { StatusDot } from "@/components/shared/StatusBadge";
 import { getWeekDays } from "@/lib/date";
 import type { Post } from "@/lib/types";
 import { cn } from "@/lib/utils";

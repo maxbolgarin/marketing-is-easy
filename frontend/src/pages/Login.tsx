@@ -101,7 +101,7 @@ export default function Login() {
               role="alert"
               className="rounded-lg bg-destructive/10 border border-destructive/30 px-3 py-2 text-sm text-destructive"
             >
-              Invalid username or password. Please try again.
+              {login.error?.message || "Invalid username or password. Please try again."}
             </div>
           )}
 

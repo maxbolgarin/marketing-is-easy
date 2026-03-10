@@ -1,7 +1,7 @@
 import { format, isSameMonth, isToday } from "date-fns";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusDot } from "@/components/common/StatusBadge";
+import { StatusDot } from "@/components/shared/StatusBadge";
 import { useCalendar } from "@/hooks/useCalendar";
 import { useUIStore } from "@/stores/ui";
 import { useEditorStore } from "@/stores/editor";

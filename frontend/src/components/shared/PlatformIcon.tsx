@@ -13,15 +13,17 @@ import {
 interface PlatformIconProps {
   platform: string;
   className?: string;
+  size?: number;
 }
 
-export default function PlatformIcon({ platform, className }: PlatformIconProps) {
+export function PlatformIcon({ platform, className, size }: PlatformIconProps) {
   const color =
     (PLATFORM_COLORS as Record<string, string>)[platform] ?? "#a1a1aa";
 
   const iconProps = {
     className: cn("size-4 shrink-0", className),
     style: { color },
+    ...(size != null ? { size } : {}),
   };
 
   switch (platform as Platform | string) {
@@ -40,3 +42,5 @@ export default function PlatformIcon({ platform, className }: PlatformIconProps)
       return <HelpCircle {...iconProps} />;
   }
 }
+
+export default PlatformIcon;

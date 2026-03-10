@@ -36,6 +36,13 @@ def _post_response(post, publications=None) -> PostResponse:
     return resp
 
 
+async def _post_response_with_pubs(post, db: AsyncSession) -> PostResponse:
+    """Build PostResponse with publications loaded from DB."""
+    pub_repo = PublicationRepo(db)
+    pubs = await pub_repo.get_publications_for_post(post.id)
+    return _post_response(post, pubs)
+
+
 @router.get("", response_model=PaginatedResponse[PostResponse])
 async def list_posts(
     limit: int = Query(20, ge=1, le=100),
@@ -60,8 +67,13 @@ async def list_posts(
         date_to=date_to,
         track=track,
     )
+    pub_repo = PublicationRepo(db)
+    items = []
+    for p in posts:
+        pubs = await pub_repo.get_publications_for_post(p.id)
+        items.append(_post_response(p, pubs))
     return PaginatedResponse(
-        items=[_post_response(p) for p in posts],
+        items=items,
         total=total,
         limit=limit,
         offset=offset,
@@ -91,7 +103,7 @@ async def create_post(
         await db.refresh(post)
     if body.scheduled_at:
         await repo.update_post_schedule(post.id, body.scheduled_at)
-    return _post_response(post)
+    return await _post_response_with_pubs(post, db)
 
 
 @router.get("/{post_id}", response_model=PostResponse)
@@ -104,9 +116,7 @@ async def get_post(
     post = await repo.get_post(post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    pub_repo = PublicationRepo(db)
-    pubs = await pub_repo.get_publications_for_post(post_id)
-    return _post_response(post, pubs)
+    return await _post_response_with_pubs(post, db)
 
 
 @router.patch("/{post_id}", response_model=PostResponse)
@@ -121,30 +131,28 @@ async def update_post(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    if body.text_content is not None:
-        await repo.update_post_text(post_id, body.text_content)
-    if body.scheduled_at is not None:
-        await repo.update_post_schedule(post_id, body.scheduled_at)
-    if body.status is not None:
-        await repo.update_post_status(post_id, body.status)
-    if body.generation_params is not None:
-        await repo.update_post_generation_params(post_id, body.generation_params)
-    if body.theme_id is not None:
-        post = await repo.get_post(post_id)
-        post.theme_id = body.theme_id
-        await db.commit()
-    if body.media_type is not None:
-        post = await repo.get_post(post_id)
-        post.media_type = body.media_type
-        await db.commit()
-    if body.text_prompt is not None:
-        post = await repo.get_post(post_id)
-        post.text_prompt = body.text_prompt
-        await db.commit()
+    provided = body.model_fields_set
 
-    post = await repo.get_post(post_id)
+    if "text_content" in provided:
+        post.text_content = body.text_content
+    if "text_prompt" in provided:
+        post.text_prompt = body.text_prompt
+    if "media_type" in provided:
+        post.media_type = body.media_type
+    if "theme_id" in provided:
+        post.theme_id = body.theme_id
+    if "scheduled_at" in provided:
+        post.scheduled_at = body.scheduled_at
+    if "status" in provided and body.status is not None:
+        post.status = body.status
+    if "generation_params" in provided and body.generation_params is not None:
+        post.generation_params = body.generation_params
+
+    post.updated_at = datetime.now(timezone.utc)
+    await db.commit()
     await db.refresh(post)
-    return _post_response(post)
+
+    return await _post_response_with_pubs(post, db)
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -184,7 +192,7 @@ async def generate_text(
     await repo.update_post_status(post_id, "draft")
     await enqueue_task("regenerate_post", {"post_id": str(post_id)})
     post = await repo.get_post(post_id)
-    return _post_response(post)
+    return await _post_response_with_pubs(post, db)
 
 
 @router.post("/{post_id}/generate-image", response_model=PostResponse)
@@ -203,7 +211,7 @@ async def generate_image(
     await repo.update_post_generation_params(post_id, {"media_style": media_style})
     await enqueue_task("generate_image", {"post_id": str(post_id), "media_style": media_style})
     post = await repo.get_post(post_id)
-    return _post_response(post)
+    return await _post_response_with_pubs(post, db)
 
 
 @router.post("/{post_id}/generate-video", response_model=PostResponse)
@@ -220,7 +228,7 @@ async def generate_video(
     await repo.update_post_status(post_id, "draft")
     await enqueue_video_task({"post_id": str(post_id)})
     post = await repo.get_post(post_id)
-    return _post_response(post)
+    return await _post_response_with_pubs(post, db)
 
 
 @router.post("/{post_id}/approve", response_model=PostResponse)
@@ -239,7 +247,7 @@ async def approve_post(
     if body and body.scheduled_at:
         await repo.update_post_schedule(post_id, body.scheduled_at)
     post = await repo.get_post(post_id)
-    return _post_response(post)
+    return await _post_response_with_pubs(post, db)
 
 
 @router.post("/{post_id}/reject", response_model=PostResponse)
@@ -254,7 +262,7 @@ async def reject_post(
         raise HTTPException(status_code=404, detail="Post not found")
     await repo.update_post_status(post_id, "rejected")
     post = await repo.get_post(post_id)
-    return _post_response(post)
+    return await _post_response_with_pubs(post, db)
 
 
 @router.post("/{post_id}/publish-now", response_model=PostResponse)
@@ -271,7 +279,7 @@ async def publish_now(
     await repo.update_post_status(post_id, "approved", approved_by=user.username)
     await repo.update_post_schedule(post_id, datetime.now(timezone.utc))
     post = await repo.get_post(post_id)
-    return _post_response(post)
+    return await _post_response_with_pubs(post, db)
 
 
 # --- Platform Variants ---

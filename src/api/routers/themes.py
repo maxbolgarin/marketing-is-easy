@@ -44,9 +44,9 @@ async def list_themes(
     _user: ApiUser = Depends(get_current_user),
 ):
     repo = ThemeRepo(db)
-    themes = await repo.list_themes(track=track, status=status_filter, limit=limit, offset=offset)
+    themes, total = await repo.list_themes(track=track, status=status_filter, limit=limit, offset=offset)
     items = [await _theme_response(t, repo) for t in themes]
-    return PaginatedResponse(items=items, total=len(items), limit=limit, offset=offset)
+    return PaginatedResponse(items=items, total=total, limit=limit, offset=offset)
 
 
 @router.post("", response_model=ThemeResponse, status_code=status.HTTP_201_CREATED)
@@ -121,8 +121,19 @@ async def batch_generate(
         if body.date_from:
             scheduled_at = body.date_from + timedelta(days=i)
             if body.cadence_time:
-                h, m = body.cadence_time.split(":")
-                scheduled_at = scheduled_at.replace(hour=int(h), minute=int(m), second=0)
+                try:
+                    parts = body.cadence_time.split(":")
+                    if len(parts) != 2:
+                        raise ValueError("Invalid format")
+                    h, m = int(parts[0]), int(parts[1])
+                    if not (0 <= h < 24 and 0 <= m < 60):
+                        raise ValueError("Invalid hour/minute range")
+                    scheduled_at = scheduled_at.replace(hour=h, minute=m, second=0)
+                except (ValueError, IndexError):
+                    raise HTTPException(
+                        status_code=400,
+                        detail="cadence_time must be in HH:MM format (00:00-23:59)",
+                    )
 
         post = await post_repo.create_post(
             track=theme.track,

@@ -59,14 +59,19 @@ class ThemeRepo:
         status: str | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[Theme]:
-        stmt = select(Theme).order_by(Theme.created_at.desc()).limit(limit).offset(offset)
+    ) -> tuple[list[Theme], int]:
+        base = select(Theme)
         if track:
-            stmt = stmt.where(Theme.track == track)
+            base = base.where(Theme.track == track)
         if status:
-            stmt = stmt.where(Theme.status == status)
+            base = base.where(Theme.status == status)
+
+        count_stmt = select(func.count()).select_from(base.subquery())
+        total = (await self.session.execute(count_stmt)).scalar() or 0
+
+        stmt = base.order_by(Theme.created_at.desc()).limit(limit).offset(offset)
         result = await self.session.execute(stmt)
-        return list(result.scalars().all())
+        return list(result.scalars().all()), total
 
     async def update_theme(self, theme_id: uuid.UUID, **kwargs: Any) -> Theme | None:
         theme = await self.get_theme(theme_id)

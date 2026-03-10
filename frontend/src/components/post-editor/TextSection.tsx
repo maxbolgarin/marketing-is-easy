@@ -58,7 +58,6 @@ export default function TextSection({ post, onUpdate }: TextSectionProps) {
 
   function handleSaveEdit() {
     updatePost.mutate({ id: post.id, data: { text_content: editedText } });
-    onUpdate({ text_content: editedText });
     setEditingGenerated(false);
   }
 

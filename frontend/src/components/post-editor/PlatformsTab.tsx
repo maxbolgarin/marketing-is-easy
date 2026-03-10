@@ -1,7 +1,7 @@
 import { Layers } from "lucide-react";
 
-import { updateVariant } from "@/api/posts";
 import type { UpdateVariantData } from "@/api/posts";
+import { useUpdateVariant } from "@/hooks/usePost";
 import type { Post } from "@/lib/types";
 import PlatformVariantCard from "./PlatformVariantCard";
 
@@ -11,12 +11,13 @@ interface PlatformsTabProps {
 
 export default function PlatformsTab({ post }: PlatformsTabProps) {
   const publications = post.publications ?? [];
+  const updateVariant = useUpdateVariant();
 
-  async function handleVariantUpdate(
+  function handleVariantUpdate(
     variantId: string,
     data: UpdateVariantData,
   ) {
-    await updateVariant(post.id, variantId, data);
+    updateVariant.mutate({ postId: post.id, variantId, data });
   }
 
   return (

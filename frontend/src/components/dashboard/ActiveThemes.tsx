@@ -3,8 +3,8 @@ import { Layers } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/common/EmptyState";
-import { PlatformIcon } from "@/components/common/PlatformIcon";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { PlatformIcon } from "@/components/shared/PlatformIcon";
 import { useThemes } from "@/hooks/useTheme";
 import type { Theme } from "@/lib/types";
 import { cn } from "@/lib/utils";

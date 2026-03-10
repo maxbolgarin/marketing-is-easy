@@ -18,18 +18,17 @@ export default function PlatformVariantCard({
   publication,
   onUpdate,
 }: PlatformVariantCardProps) {
-  const [enabled, setEnabled] = useState(publication.status !== "rejected");
+  const enabled = publication.status !== "rejected";
   const [editing, setEditing] = useState(false);
   const [editedText, setEditedText] = useState(publication.platform_text ?? "");
 
   const charLimit = PLATFORM_CHAR_LIMITS[publication.platform] ?? 0;
-  const charCount = (publication.platform_text ?? "").length;
+  const displayText = editing ? editedText : (publication.platform_text ?? "");
+  const charCount = displayText.length;
   const overLimit = charLimit > 0 && charCount > charLimit;
 
   function handleToggle() {
-    const next = !enabled;
-    setEnabled(next);
-    onUpdate({ is_enabled: next });
+    onUpdate({ is_enabled: !enabled });
   }
 
   function handleSave() {

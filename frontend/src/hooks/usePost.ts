@@ -8,8 +8,9 @@ import {
   publishNow,
   rejectPost,
   updatePost,
+  updateVariant,
 } from "@/api/posts";
-import type { ApprovePostData, CreatePostData, UpdatePostData } from "@/api/posts";
+import type { ApprovePostData, CreatePostData, UpdatePostData, UpdateVariantData } from "@/api/posts";
 
 import { queryKeys } from "./queryKeys";
 
@@ -23,7 +24,7 @@ export function usePost(id: string) {
     queryFn: () => getPost(id),
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      return status === "draft" || status === "generating" ? 3000 : false;
+      return status === "generating" ? 3000 : false;
     },
     enabled: Boolean(id),
   });
@@ -135,6 +136,30 @@ export function useDeletePost() {
       queryClient.removeQueries({ queryKey: queryKeys.posts.detail(id) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.posts.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.stats });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// useUpdateVariant
+// ---------------------------------------------------------------------------
+
+interface UpdateVariantVariables {
+  postId: string;
+  variantId: string;
+  data: UpdateVariantData;
+}
+
+export function useUpdateVariant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ postId, variantId, data }: UpdateVariantVariables) =>
+      updateVariant(postId, variantId, data),
+    onSuccess: (_result, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.posts.detail(variables.postId),
+      });
     },
   });
 }

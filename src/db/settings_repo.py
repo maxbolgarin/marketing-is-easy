@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,7 +36,7 @@ class SettingsRepo:
                 set_={
                     "value": value,
                     "is_secret": is_secret,
-                    "updated_at": AppSetting.updated_at,
+                    "updated_at": func.now(),
                 },
             )
         )

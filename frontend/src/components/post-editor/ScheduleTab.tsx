@@ -41,7 +41,7 @@ export default function ScheduleTab({ post }: ScheduleTabProps) {
     setScheduledAt("");
     updatePost.mutate({
       id: post.id,
-      data: { scheduled_at: undefined },
+      data: { scheduled_at: null },
     });
   }
 

@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { useSearchParams } from "react-router";
+
 import { CalendarToolbar } from "@/components/calendar/CalendarToolbar";
 import { MonthView } from "@/components/calendar/MonthView";
 import { PostsList } from "@/components/calendar/PostsList";
@@ -6,6 +9,23 @@ import { useUIStore } from "@/stores/ui";
 
 export default function Calendar() {
   const calendarView = useUIStore((s) => s.calendarView);
+  const setFilters = useUIStore((s) => s.setFilters);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Apply URL query params as filters on mount
+  useEffect(() => {
+    const statusParam = searchParams.get("status");
+    if (statusParam) {
+      setFilters({ statuses: [statusParam] });
+      // Remove query param so it doesn't persist on navigation
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("status");
+        return next;
+      }, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <main className="flex flex-col gap-4 p-4 sm:p-6 lg:p-8 h-full">

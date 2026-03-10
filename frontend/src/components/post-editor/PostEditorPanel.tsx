@@ -54,8 +54,7 @@ export default function PostEditorPanel() {
 
   const { data: post, isLoading, isError } = usePost(postId ?? "");
 
-  const isPolling =
-    post?.status === "generating" || post?.status === "draft";
+  const isPolling = post?.status === "generating";
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && closeEditor()}>
