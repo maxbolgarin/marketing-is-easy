@@ -1,9 +1,19 @@
-import { Link } from "react-router";
-import { ArrowLeft, Settings, Pencil, CalendarDays } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { ArrowLeft, Settings, Pencil, CalendarDays, Trash2, Play, Pause, CheckCircle2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import PlatformIcon from "@/components/shared/PlatformIcon";
+import EditThemeDialog from "@/components/themes/EditThemeDialog";
+import { useUpdateTheme, useDeleteTheme } from "@/hooks/useTheme";
 import { PLATFORM_LABELS } from "@/lib/constants";
 import type { Theme, ThemeStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -32,10 +42,25 @@ interface ThemeHeaderProps {
 }
 
 export default function ThemeHeader({ theme }: ThemeHeaderProps) {
+  const [editOpen, setEditOpen] = useState(false);
+  const navigate = useNavigate();
+  const updateTheme = useUpdateTheme();
+  const deleteTheme = useDeleteTheme();
+
   const progress =
     theme.post_count > 0
       ? Math.round((theme.published_count / theme.post_count) * 100)
       : 0;
+
+  function handleStatusChange(status: ThemeStatus) {
+    updateTheme.mutate({ id: theme.id, data: { status } });
+  }
+
+  function handleDelete() {
+    deleteTheme.mutate(theme.id, {
+      onSuccess: () => navigate("/themes"),
+    });
+  }
 
   return (
     <div className="flex flex-col gap-4 pb-4 border-b border-border">
@@ -48,15 +73,56 @@ export default function ThemeHeader({ theme }: ThemeHeaderProps) {
           Themes
         </Link>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setEditOpen(true)}
+          >
             <Pencil className="size-3.5" />
             Edit
           </Button>
-          <Button variant="ghost" size="icon-sm" aria-label="Theme settings">
-            <Settings className="size-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="icon-sm" aria-label="Theme settings">
+                  <Settings className="size-4" />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end">
+              {theme.status !== "active" && (
+                <DropdownMenuItem onClick={() => handleStatusChange("active")}>
+                  <Play className="size-3.5" />
+                  Set Active
+                </DropdownMenuItem>
+              )}
+              {theme.status !== "paused" && theme.status !== "draft" && (
+                <DropdownMenuItem onClick={() => handleStatusChange("paused")}>
+                  <Pause className="size-3.5" />
+                  Pause
+                </DropdownMenuItem>
+              )}
+              {theme.status !== "completed" && (
+                <DropdownMenuItem onClick={() => handleStatusChange("completed")}>
+                  <CheckCircle2 className="size-3.5" />
+                  Mark Completed
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleDelete}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="size-3.5" />
+                Delete Theme
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
+
+      <EditThemeDialog theme={theme} open={editOpen} onOpenChange={setEditOpen} />
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3 flex-wrap">

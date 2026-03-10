@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Edit2, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,17 +23,36 @@ export default function TextSection({ post, onUpdate }: TextSectionProps) {
   const [editingGenerated, setEditingGenerated] = useState(false);
   const [editedText, setEditedText] = useState(post.text_content ?? "");
 
+  // Local state for inputs — prevents refetch from overwriting while typing
+  const [localContent, setLocalContent] = useState(post.text_content ?? "");
+  const [localPrompt, setLocalPrompt] = useState(post.text_prompt ?? "");
+  const contentFocused = useRef(false);
+  const promptFocused = useRef(false);
+
+  // Sync server → local only when user is NOT editing
+  useEffect(() => {
+    if (!contentFocused.current) {
+      setLocalContent(post.text_content ?? "");
+    }
+  }, [post.text_content]);
+
+  useEffect(() => {
+    if (!promptFocused.current) {
+      setLocalPrompt(post.text_prompt ?? "");
+    }
+  }, [post.text_prompt]);
+
   const generateText = useGenerateText();
   const updatePost = useUpdatePost();
 
-  const wordCount = (post.text_content ?? "").trim().split(/\s+/).filter(Boolean).length;
+  const wordCount = localContent.trim().split(/\s+/).filter(Boolean).length;
   const isGenerating =
     generateText.isPending || post.status === "generating";
 
   function handleGenerate() {
     generateText.mutate({
       id: post.id,
-      data: { prompt: post.text_prompt },
+      data: { prompt: localPrompt },
     });
   }
 
@@ -41,6 +60,20 @@ export default function TextSection({ post, onUpdate }: TextSectionProps) {
     updatePost.mutate({ id: post.id, data: { text_content: editedText } });
     onUpdate({ text_content: editedText });
     setEditingGenerated(false);
+  }
+
+  function handleContentBlur() {
+    contentFocused.current = false;
+    if (localContent !== (post.text_content ?? "")) {
+      onUpdate({ text_content: localContent });
+    }
+  }
+
+  function handlePromptBlur() {
+    promptFocused.current = false;
+    if (localPrompt !== (post.text_prompt ?? "")) {
+      onUpdate({ text_prompt: localPrompt });
+    }
   }
 
   return (
@@ -69,8 +102,10 @@ export default function TextSection({ post, onUpdate }: TextSectionProps) {
               Prompt
             </label>
             <Textarea
-              value={post.text_prompt ?? ""}
-              onChange={(e) => onUpdate({ text_prompt: e.target.value })}
+              value={localPrompt}
+              onChange={(e) => setLocalPrompt(e.target.value)}
+              onFocus={() => { promptFocused.current = true; }}
+              onBlur={handlePromptBlur}
               placeholder="Describe what you want to generate..."
               className="min-h-[80px] resize-none text-sm"
             />
@@ -148,8 +183,10 @@ export default function TextSection({ post, onUpdate }: TextSectionProps) {
             </span>
           </div>
           <Textarea
-            value={post.text_content ?? ""}
-            onChange={(e) => onUpdate({ text_content: e.target.value })}
+            value={localContent}
+            onChange={(e) => setLocalContent(e.target.value)}
+            onFocus={() => { contentFocused.current = true; }}
+            onBlur={handleContentBlur}
             placeholder="Write your post content..."
             className="min-h-[160px] resize-none text-sm"
           />
