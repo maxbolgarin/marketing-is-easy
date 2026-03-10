@@ -26,6 +26,7 @@ export default function ImageSection({ post, onUpdate }: ImageSectionProps) {
   const [mode, setMode] = useState<ImageMode>(currentMode);
   const [prompt, setPrompt] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const generateImage = useGenerateImage();
@@ -80,11 +81,12 @@ export default function ImageSection({ post, onUpdate }: ImageSectionProps) {
               const file = e.target.files?.[0];
               if (!file) return;
               setIsUploading(true);
+              setUploadError(null);
               try {
                 const asset = await uploadAsset(file);
                 onUpdate({ media_type: "image", media_urls: [asset.url] });
               } catch {
-                // upload failed silently — user can retry
+                setUploadError("Image upload failed. Please try again.");
               } finally {
                 setIsUploading(false);
                 e.target.value = "";
@@ -109,6 +111,9 @@ export default function ImageSection({ post, onUpdate }: ImageSectionProps) {
               </>
             )}
           </button>
+          {uploadError && (
+            <p className="text-xs text-red-400">{uploadError}</p>
+          )}
           {imageUrl && <ImagePreview url={imageUrl} onRemove={() => onUpdate({ media_urls: [], media_type: "none" })} />}
         </div>
       )}
@@ -146,6 +151,12 @@ export default function ImageSection({ post, onUpdate }: ImageSectionProps) {
               </Button>
             )}
           </div>
+
+          {generateImage.isError && (
+            <p className="text-xs text-red-400 rounded-md bg-red-950/40 px-2.5 py-1.5">
+              Generation failed: {generateImage.error instanceof Error ? generateImage.error.message : "Unknown error"}
+            </p>
+          )}
 
           {imageUrl && (
             <ImagePreview

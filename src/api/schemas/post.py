@@ -68,6 +68,7 @@ class PostUpdateRequest(BaseModel):
     text_content: str | None = None
     text_prompt: str | None = None
     media_type: str | None = None
+    media_urls: list[str] | None = None
     scheduled_at: datetime | None = None
     status: str | None = None
     generation_params: dict[str, Any] | None = None

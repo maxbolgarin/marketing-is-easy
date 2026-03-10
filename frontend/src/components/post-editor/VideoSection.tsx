@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
-import { Upload, VideoIcon } from "lucide-react";
+import { Loader2, Upload, VideoIcon } from "lucide-react";
 
+import { uploadAsset } from "@/api/assets";
 import { useGenerateVideo } from "@/hooks/useGeneration";
 import type { Post } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,8 @@ export default function VideoSection({ post, onUpdate }: VideoSectionProps) {
   };
 
   const [mode, setMode] = useState<VideoMode>(currentMode);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const generateVideo = useGenerateVideo();
@@ -64,21 +67,43 @@ export default function VideoSection({ post, onUpdate }: VideoSectionProps) {
             type="file"
             accept="video/*"
             className="hidden"
-            onChange={(e) => {
+            onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
-              const objectUrl = URL.createObjectURL(file);
-              onUpdate({ media_type: "video", media_urls: [objectUrl] });
+              setIsUploading(true);
+              setUploadError(null);
+              try {
+                const asset = await uploadAsset(file);
+                onUpdate({ media_type: "video", media_urls: [asset.url] });
+              } catch {
+                setUploadError("Video upload failed. Please try again.");
+              } finally {
+                setIsUploading(false);
+                e.target.value = "";
+              }
             }}
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/20 px-6 py-10 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-muted/40 hover:text-foreground"
+            disabled={isUploading}
+            className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/20 px-6 py-10 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-muted/40 hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Upload className="size-6" />
-            <span>Click to upload video</span>
-            <span className="text-xs">MP4, MOV up to 500MB</span>
+            {isUploading ? (
+              <>
+                <Loader2 className="size-6 animate-spin" />
+                <span>Uploading...</span>
+              </>
+            ) : (
+              <>
+                <Upload className="size-6" />
+                <span>Click to upload video</span>
+                <span className="text-xs">MP4, MOV up to 500MB</span>
+              </>
+            )}
           </button>
+          {uploadError && (
+            <p className="text-xs text-red-400">{uploadError}</p>
+          )}
           {videoUrl && <VideoPreview url={videoUrl} />}
         </div>
       )}
@@ -106,6 +131,11 @@ export default function VideoSection({ post, onUpdate }: VideoSectionProps) {
             )}
           </div>
 
+          {generateVideo.isError && (
+            <p className="text-xs text-red-400 rounded-md bg-red-950/40 px-2.5 py-1.5">
+              Generation failed: {generateVideo.error instanceof Error ? generateVideo.error.message : "Unknown error"}
+            </p>
+          )}
           {videoUrl && <VideoPreview url={videoUrl} />}
         </div>
       )}

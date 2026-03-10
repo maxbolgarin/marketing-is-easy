@@ -3,7 +3,7 @@ import { api } from "@/api/client";
 
 export interface RescheduleItem {
   post_id: string;
-  scheduled_at: string;
+  new_scheduled_at: string;
 }
 
 export interface RescheduleResponse {
@@ -41,5 +41,5 @@ export function getCalendar(
  * Reschedules multiple posts in a single request.
  */
 export function reschedule(items: RescheduleItem[]): Promise<RescheduleResponse> {
-  return api.post<RescheduleResponse>("/calendar/reschedule", { items });
+  return api.patch<RescheduleResponse>("/calendar/reschedule", { items });
 }

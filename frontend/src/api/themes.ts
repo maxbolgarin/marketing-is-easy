@@ -40,9 +40,11 @@ export interface UpdateThemeData {
 
 export interface BatchGenerateData {
   count?: number;
-  start_date?: string;
-  end_date?: string;
-  generation_params?: Record<string, unknown>;
+  date_from?: string;
+  date_to?: string;
+  cadence_time?: string;
+  post_type?: string;
+  media_style?: string;
 }
 
 export interface BatchGenerateResult {

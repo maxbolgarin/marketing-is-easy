@@ -135,6 +135,8 @@ async def update_post(
         post.text_prompt = body.text_prompt
     if "media_type" in provided:
         post.media_type = body.media_type
+    if "media_urls" in provided:
+        post.media_urls = body.media_urls
     if "theme_id" in provided:
         post.theme_id = body.theme_id
     if "scheduled_at" in provided:

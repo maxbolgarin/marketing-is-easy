@@ -122,6 +122,12 @@ export default function TextSection({ post, onUpdate }: TextSectionProps) {
             )}
           </div>
 
+          {generateText.isError && (
+            <p className="text-xs text-red-400 rounded-md bg-red-950/40 px-2.5 py-1.5">
+              Generation failed: {generateText.error instanceof Error ? generateText.error.message : "Unknown error"}
+            </p>
+          )}
+
           {post.text_content && (
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">

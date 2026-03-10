@@ -32,6 +32,7 @@ export interface UpdatePostData {
   media_urls?: string[];
   scheduled_at?: string | null;
   status?: PostStatus;
+  theme_id?: string;
   generation_params?: Record<string, unknown>;
 }
 
@@ -47,7 +48,7 @@ export interface GenerateImageData {
 }
 
 export interface ApprovePostData {
-  platform_overrides?: Partial<Record<Platform, string>>;
+  scheduled_at?: string;
 }
 
 export interface CreateVariantData {
