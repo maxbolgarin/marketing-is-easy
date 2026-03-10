@@ -132,7 +132,7 @@ export default function NewThemeDialog({
             {/* Cadence */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">Cadence</label>
-              <Select value={cadenceType} onValueChange={setCadenceType}>
+              <Select value={cadenceType} onValueChange={(v) => v && setCadenceType(v)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
