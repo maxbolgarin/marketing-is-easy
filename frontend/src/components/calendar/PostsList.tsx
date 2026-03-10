@@ -103,7 +103,7 @@ export function PostsList() {
         </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-1.5 min-h-0">
+      <div className="flex-1 overflow-y-auto min-h-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 auto-rows-min">
         {postsQuery.isLoading && (
           <>
             {Array.from({ length: 5 }).map((_, i) => (
