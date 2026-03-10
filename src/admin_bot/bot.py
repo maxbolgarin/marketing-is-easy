@@ -22,6 +22,33 @@ async def create_tables():
         await conn.run_sync(Base.metadata.create_all)
 
 
+async def run():
+    """Run Telegram bot as a background task. Skips if token is empty."""
+    if not settings.tg_bot_token:
+        structlog.get_logger().warning("telegram_bot_skipped", reason="TG_BOT_TOKEN is empty")
+        return
+
+    bot = Bot(token=settings.tg_bot_token)
+    storage = MemoryStorage()
+    dp = Dispatcher(storage=storage)
+
+    from src.admin_bot.handlers.generate import router as generate_router
+    from src.admin_bot.handlers.review import router as review_router
+
+    dp.include_router(generate_router)
+    dp.include_router(review_router)
+
+    log = structlog.get_logger()
+    log.info("bot_polling_started")
+    try:
+        await dp.start_polling(bot, allowed_updates=["message", "callback_query"])
+    except asyncio.CancelledError:
+        log.info("bot_polling_cancelled")
+    finally:
+        await bot.session.close()
+        log.info("bot_stopped")
+
+
 async def main():
     # Logging
     logging.basicConfig(level=logging.INFO)

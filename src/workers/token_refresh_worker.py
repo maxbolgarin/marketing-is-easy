@@ -92,6 +92,17 @@ async def refresh_expiring_tokens() -> None:
                 pass
 
 
+async def run():
+    """Run token refresh worker as a background task."""
+    log.info("token_refresh_worker_started", check_interval_hours=CHECK_INTERVAL_S // 3600)
+    try:
+        while True:
+            await refresh_expiring_tokens()
+            await asyncio.sleep(CHECK_INTERVAL_S)
+    except asyncio.CancelledError:
+        log.info("token_refresh_worker_stopping")
+
+
 async def main():
     structlog.configure(
         processors=[
@@ -105,12 +116,7 @@ async def main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    try:
-        while True:
-            await refresh_expiring_tokens()
-            await asyncio.sleep(CHECK_INTERVAL_S)
-    except asyncio.CancelledError:
-        log.info("token_refresh_worker_stopping")
+    await run()
 
 
 if __name__ == "__main__":

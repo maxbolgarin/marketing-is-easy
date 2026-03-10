@@ -25,49 +25,11 @@ services:
       timeout: 3s
       retries: 5
 
-  admin-bot:
+  backend:
     build: .
-    command: python -m src.admin_bot.bot
     env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - media_storage:/app/media
-    restart: unless-stopped
-
-  generation-worker:
-    build: .
-    command: python -m src.workers.generation_worker
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - media_storage:/app/media
-    restart: unless-stopped
-
-  publish-worker:
-    build: .
-    command: python -m src.workers.publish_worker
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - media_storage:/app/media
-    restart: unless-stopped
-
-  video-worker:
-    build: .
-    command: python -m src.workers.video_worker
-    env_file: .env
+    ports:
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,15 +42,20 @@ services:
       resources:
         limits:
           memory: 4G
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
-  token-refresher:
-    build: .
-    command: python -m src.workers.token_refresh_worker
-    env_file: .env
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3005"
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
+      backend:
         condition: service_healthy
     restart: unless-stopped
 

@@ -88,6 +88,12 @@ class Settings(BaseSettings):
     youtube_client_secret: str = ""
     youtube_refresh_token: str = ""
 
+    # --- API ---
+    api_secret_key: str = "change-me-in-production"
+    api_cors_origins: str = "http://localhost:5173,http://localhost:3000"
+    api_default_admin_username: str = "admin"
+    api_default_admin_password: str = ""
+
     @property
     def admin_user_ids(self) -> set[int]:
         if not self.tg_admin_user_ids:
@@ -99,4 +105,105 @@ class Settings(BaseSettings):
         return [h.strip() for h in self.default_hashtags.split(",") if h.strip()]
 
 
-settings = Settings()
+def _coerce(value: str, field_name: str) -> object:
+    """Coerce a string override value to the type declared on Settings."""
+    try:
+        annotation = Settings.model_fields[field_name].annotation
+    except KeyError:
+        return value
+
+    # Normalise Union types like `int | None` → check for NoneType presence
+    origin = getattr(annotation, "__origin__", None)
+    args = getattr(annotation, "__args__", ())
+
+    # Handle `int | None` (UnionType / Optional[int])
+    if origin is type(None) or (args and type(None) in args):
+        # Find the real type among the args (the non-None one)
+        real_args = [a for a in args if a is not type(None)]
+        if not value:
+            return None
+        if real_args:
+            return _coerce_primitive(value, real_args[0])
+        return value
+
+    return _coerce_primitive(value, annotation)
+
+
+def _coerce_primitive(value: str, typ: type) -> object:
+    """Coerce a non-None string to a primitive type."""
+    if typ is str:
+        return value
+    if typ is int:
+        return int(value)
+    if typ is float:
+        return float(value)
+    if typ is bool:
+        return value.lower() in ("true", "1", "yes")
+    # Unknown / composite type — return as-is
+    return value
+
+
+class DynamicSettings:
+    """
+    Wraps the static ``Settings`` pydantic model and allows runtime overrides
+    loaded from the database.  All attribute access falls back to the base
+    ``Settings`` instance when no override is present.
+    """
+
+    def __init__(self) -> None:
+        self._base: Settings = Settings()
+        self._overrides: dict[str, str] = {}
+
+    async def load_from_db(self) -> None:
+        """Load all overrides from the database into the in-memory cache.
+
+        Uses lazy imports to avoid circular-import issues between
+        ``src.config.settings`` and ``src.db.*``.
+        """
+        from src.db.models import async_session  # noqa: PLC0415
+        from src.db.settings_repo import SettingsRepo  # noqa: PLC0415
+
+        async with async_session() as session:
+            repo = SettingsRepo(session)
+            self._overrides = await repo.get_all()
+
+    def update_override(self, key: str, value: str) -> None:
+        """Update a single in-memory override (e.g. after a live settings save)."""
+        self._overrides[key] = value
+
+    def _get_raw(self, name: str) -> str:
+        """Return the raw string value: override first, then base-model string."""
+        raw = self._overrides.get(name, "")
+        if raw:
+            return raw
+        # Fall back to the base Settings value (convert to str for uniformity)
+        return str(getattr(self._base, name))
+
+    @property
+    def admin_user_ids(self) -> set[int]:
+        raw = self._get_raw("tg_admin_user_ids")
+        if not raw:
+            return set()
+        return {int(uid.strip()) for uid in raw.split(",") if uid.strip()}
+
+    @property
+    def hashtags_list(self) -> list[str]:
+        raw = self._get_raw("default_hashtags")
+        return [h.strip() for h in raw.split(",") if h.strip()]
+
+    def __getattr__(self, name: str) -> object:
+        # Guard: internal attributes (_base, _overrides, etc.) must bypass this
+        # handler to avoid infinite recursion during __init__.
+        if name.startswith("_"):
+            return object.__getattribute__(self, name)
+
+        # Check in-memory overrides first (non-empty value wins)
+        raw = object.__getattribute__(self, "_overrides").get(name, "")
+        if raw:
+            return _coerce(raw, name)
+
+        # Fall back to the static base settings
+        return getattr(object.__getattribute__(self, "_base"), name)
+
+
+settings = DynamicSettings()

@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy import (
     Boolean,
     DateTime,
+    ForeignKey,
     Integer,
     String,
     Text,
@@ -72,6 +73,9 @@ class Post(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     source_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    theme_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("themes.id", ondelete="SET NULL"), index=True
+    )
     track: Mapped[str] = mapped_column(String(5), nullable=False)
     language: Mapped[str] = mapped_column(String(5), nullable=False)
 
@@ -157,3 +161,48 @@ class ContentTemplate(Base):
     config: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Theme(Base):
+    __tablename__ = "themes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="draft", index=True)
+    target_platforms: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    cadence_type: Mapped[str] = mapped_column(String(20), default="manual")
+    cadence_rule: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    start_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    generation_context: Mapped[str | None] = mapped_column(Text)
+    default_prompt_template: Mapped[str | None] = mapped_column(Text)
+    color: Mapped[str] = mapped_column(String(20), default="#3B82F6")
+    template_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    track: Mapped[str] = mapped_column(String(5), default="eu")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class ApiUser(Base):
+    __tablename__ = "api_users"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    username: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    display_name: Mapped[str | None] = mapped_column(String(200))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AppSetting(Base):
+    __tablename__ = "app_settings"
+
+    key: Mapped[str] = mapped_column(String(100), primary_key=True)
+    value: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
+    is_secret: Mapped[bool] = mapped_column(Boolean, default=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )

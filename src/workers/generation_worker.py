@@ -63,15 +63,16 @@ async def handle_regenerate(payload: dict) -> None:
         log.info("post_regenerated", post_id=str(post_id))
 
         # Notify admin bot
-        from aiogram import Bot
+        if settings.tg_bot_token:
+            from aiogram import Bot
 
-        bot = Bot(token=settings.tg_bot_token)
-        try:
-            from src.admin_bot.handlers.review import send_post_for_review
+            bot = Bot(token=settings.tg_bot_token)
+            try:
+                from src.admin_bot.handlers.review import send_post_for_review
 
-            await send_post_for_review(bot, post_id)
-        finally:
-            await bot.session.close()
+                await send_post_for_review(bot, post_id)
+            finally:
+                await bot.session.close()
 
 
 async def handle_generate_image(payload: dict) -> None:
@@ -111,14 +112,15 @@ async def handle_generate_image(payload: dict) -> None:
         log.info("image_regenerated", post_id=str(post_id), path=local_path)
 
     # Notify admin
-    from aiogram import Bot
+    if settings.tg_bot_token:
+        from aiogram import Bot
 
-    bot = Bot(token=settings.tg_bot_token)
-    try:
-        from src.admin_bot.handlers.review import send_post_for_review
-        await send_post_for_review(bot, post_id)
-    finally:
-        await bot.session.close()
+        bot = Bot(token=settings.tg_bot_token)
+        try:
+            from src.admin_bot.handlers.review import send_post_for_review
+            await send_post_for_review(bot, post_id)
+        finally:
+            await bot.session.close()
 
 
 async def handle_generate_video(payload: dict) -> None:
@@ -164,15 +166,16 @@ async def handle_generate_video(payload: dict) -> None:
     log.info("video_generated", post_id=str(post_id), video=str(video_path))
 
     # Notify admin bot
-    from aiogram import Bot
+    if settings.tg_bot_token:
+        from aiogram import Bot
 
-    bot = Bot(token=settings.tg_bot_token)
-    try:
-        from src.admin_bot.handlers.review import send_post_for_review
+        bot = Bot(token=settings.tg_bot_token)
+        try:
+            from src.admin_bot.handlers.review import send_post_for_review
 
-        await send_post_for_review(bot, post_id)
-    finally:
-        await bot.session.close()
+            await send_post_for_review(bot, post_id)
+        finally:
+            await bot.session.close()
 
 
 TASK_HANDLERS = {
@@ -182,20 +185,9 @@ TASK_HANDLERS = {
 }
 
 
-async def main():
-    structlog.configure(
-        processors=[
-            structlog.stdlib.add_log_level,
-            structlog.dev.ConsoleRenderer(),
-        ],
-    )
-
+async def run():
+    """Run generation worker as a background task."""
     log.info("generation_worker_started")
-
-    # Ensure tables exist
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
     try:
         while True:
             task = await dequeue_task(timeout=5)
@@ -213,9 +205,26 @@ async def main():
                     log.error("task_failed", task_type=task_type, error=str(e))
             else:
                 log.warning("unknown_task_type", task_type=task_type)
-
     except asyncio.CancelledError:
         log.info("generation_worker_stopping")
+
+
+async def main():
+    structlog.configure(
+        processors=[
+            structlog.stdlib.add_log_level,
+            structlog.dev.ConsoleRenderer(),
+        ],
+    )
+
+    log.info("generation_worker_started")
+
+    # Ensure tables exist
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    try:
+        await run()
     finally:
         await close_redis()
 

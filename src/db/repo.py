@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import ContentSource, Post, PostPublication
@@ -145,6 +145,77 @@ class PostRepo:
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
+    async def get_posts_filtered(
+        self,
+        limit: int = 20,
+        offset: int = 0,
+        status: str | None = None,
+        theme_id: uuid.UUID | None = None,
+        platform: str | None = None,
+        date_from: datetime | None = None,
+        date_to: datetime | None = None,
+        track: str | None = None,
+    ) -> tuple[list[Post], int]:
+        """Return (posts, total_count) with filters and pagination."""
+        base = select(Post)
+        if status:
+            base = base.where(Post.status == status)
+        if theme_id:
+            base = base.where(Post.theme_id == theme_id)
+        if track:
+            base = base.where(Post.track == track)
+        if date_from:
+            base = base.where(Post.scheduled_at >= date_from)
+        if date_to:
+            base = base.where(Post.scheduled_at <= date_to)
+        if platform:
+            from src.db.models import PostPublication
+            base = base.join(PostPublication, PostPublication.post_id == Post.id).where(
+                PostPublication.platform == platform
+            )
+
+        count_stmt = select(func.count()).select_from(base.subquery())
+        total = (await self.session.execute(count_stmt)).scalar() or 0
+
+        stmt = base.order_by(Post.created_at.desc()).limit(limit).offset(offset)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all()), total
+
+    async def get_posts_for_calendar(
+        self,
+        start: datetime,
+        end: datetime,
+        track: str | None = None,
+    ) -> list[Post]:
+        stmt = (
+            select(Post)
+            .where(Post.scheduled_at.isnot(None))
+            .where(Post.scheduled_at >= start)
+            .where(Post.scheduled_at <= end)
+            .where(Post.status.notin_(["rejected"]))
+            .order_by(Post.scheduled_at)
+        )
+        if track:
+            stmt = stmt.where(Post.track == track)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def count_by_status(
+        self,
+        statuses: list[str],
+        track: str | None = None,
+        date_from: datetime | None = None,
+        date_to: datetime | None = None,
+    ) -> int:
+        stmt = select(func.count()).select_from(Post).where(Post.status.in_(statuses))
+        if track:
+            stmt = stmt.where(Post.track == track)
+        if date_from:
+            stmt = stmt.where(Post.created_at >= date_from)
+        if date_to:
+            stmt = stmt.where(Post.created_at <= date_to)
+        return (await self.session.execute(stmt)).scalar() or 0
+
 
 class PublicationRepo:
     def __init__(self, session: AsyncSession):
@@ -211,6 +282,23 @@ class PublicationRepo:
         stmt = select(PostPublication).where(PostPublication.post_id == post_id)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
+
+    async def update_publication_content(
+        self,
+        pub_id: uuid.UUID,
+        platform_text: str | None = None,
+        platform_media_url: str | None = None,
+    ) -> PostPublication | None:
+        pub = await self.session.get(PostPublication, pub_id)
+        if not pub:
+            return None
+        if platform_text is not None:
+            pub.platform_text = platform_text
+        if platform_media_url is not None:
+            pub.platform_media_url = platform_media_url
+        await self.session.commit()
+        await self.session.refresh(pub)
+        return pub
 
 
 class ContentSourceRepo:

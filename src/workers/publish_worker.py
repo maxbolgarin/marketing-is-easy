@@ -23,6 +23,10 @@ log = structlog.get_logger()
 
 async def publish_post(post_id: uuid.UUID) -> None:
     """Publish a single post to all configured platforms."""
+    if not settings.tg_bot_token:
+        log.warning("publish_skipped", reason="tg_bot_token is empty", post_id=str(post_id))
+        return
+
     bot = Bot(token=settings.tg_bot_token)
 
     try:
@@ -119,6 +123,21 @@ async def check_and_publish() -> int:
     return count
 
 
+async def run():
+    """Run publish worker as a background task."""
+    log.info("publish_worker_started")
+    try:
+        while True:
+            published = await check_and_publish()
+            if published:
+                log.info("publish_cycle_complete", count=published)
+
+            # Check every 30 seconds
+            await asyncio.sleep(30)
+    except asyncio.CancelledError:
+        log.info("publish_worker_stopping")
+
+
 async def main():
     structlog.configure(
         processors=[
@@ -132,17 +151,7 @@ async def main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    try:
-        while True:
-            published = await check_and_publish()
-            if published:
-                log.info("publish_cycle_complete", count=published)
-
-            # Check every 30 seconds
-            await asyncio.sleep(30)
-
-    except asyncio.CancelledError:
-        log.info("publish_worker_stopping")
+    await run()
 
 
 if __name__ == "__main__":

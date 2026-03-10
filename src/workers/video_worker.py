@@ -19,19 +19,9 @@ from src.workers.generation_worker import handle_generate_video
 log = structlog.get_logger()
 
 
-async def main():
-    structlog.configure(
-        processors=[
-            structlog.stdlib.add_log_level,
-            structlog.dev.ConsoleRenderer(),
-        ],
-    )
-
+async def run():
+    """Run video worker as a background task."""
     log.info("video_worker_started")
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
     try:
         while True:
             task = await dequeue_video_task(timeout=10)
@@ -48,9 +38,25 @@ async def main():
                     log.error("video_task_failed", error=str(e), exc_info=True)
             else:
                 log.warning("unknown_video_task_type", task_type=task_type)
-
     except asyncio.CancelledError:
         log.info("video_worker_stopping")
+
+
+async def main():
+    structlog.configure(
+        processors=[
+            structlog.stdlib.add_log_level,
+            structlog.dev.ConsoleRenderer(),
+        ],
+    )
+
+    log.info("video_worker_started")
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    try:
+        await run()
     finally:
         await close_redis()
 
