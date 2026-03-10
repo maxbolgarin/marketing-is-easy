@@ -88,6 +88,7 @@ async def send_post_for_review(bot: Bot, post_id: uuid.UUID) -> None:
                 caption = preview[:1020] + "…" if len(preview) > 1024 else preview
                 msg = await bot.send_video(
                     chat_id=settings.tg_admin_chat_id,
+                    message_thread_id=settings.tg_admin_thread_id,
                     video=FSInputFile(video_path),
                     caption=caption,
                     parse_mode="HTML",
@@ -96,6 +97,7 @@ async def send_post_for_review(bot: Bot, post_id: uuid.UUID) -> None:
             else:
                 msg = await bot.send_message(
                     chat_id=settings.tg_admin_chat_id,
+                    message_thread_id=settings.tg_admin_thread_id,
                     text=f"⚠️ Video file missing: {video_path}\n\n{preview}",
                     parse_mode="HTML",
                     reply_markup=keyboard,
@@ -107,6 +109,7 @@ async def send_post_for_review(bot: Bot, post_id: uuid.UUID) -> None:
                 caption = preview[:1020] + "…" if len(preview) > 1024 else preview
                 msg = await bot.send_photo(
                     chat_id=settings.tg_admin_chat_id,
+                    message_thread_id=settings.tg_admin_thread_id,
                     photo=FSInputFile(media_path),
                     caption=caption,
                     parse_mode="HTML",
@@ -116,6 +119,7 @@ async def send_post_for_review(bot: Bot, post_id: uuid.UUID) -> None:
                 # File missing — send text with warning
                 msg = await bot.send_message(
                     chat_id=settings.tg_admin_chat_id,
+                    message_thread_id=settings.tg_admin_thread_id,
                     text=f"⚠️ Image file missing: {media_path}\n\n{preview}",
                     parse_mode="HTML",
                     reply_markup=keyboard,
@@ -123,6 +127,7 @@ async def send_post_for_review(bot: Bot, post_id: uuid.UUID) -> None:
         else:
             msg = await bot.send_message(
                 chat_id=settings.tg_admin_chat_id,
+                    message_thread_id=settings.tg_admin_thread_id,
                 text=preview,
                 parse_mode="HTML",
                 reply_markup=keyboard,
@@ -556,6 +561,7 @@ async def _try_publish_instagram(bot, post, pub_repo: PublicationRepo) -> None:
 
         await bot.send_message(
             chat_id=settings.tg_admin_chat_id,
+                    message_thread_id=settings.tg_admin_thread_id,
             text=(
                 f"📷 <b>Instagram published!</b>\n"
                 f'<a href="{result.get("platform_url")}">View post</a>\n'
@@ -574,6 +580,7 @@ async def _try_publish_instagram(bot, post, pub_repo: PublicationRepo) -> None:
         await manual.send_for_manual_posting(bot, post, "instagram_post", pub.id)
         await bot.send_message(
             chat_id=settings.tg_admin_chat_id,
+                    message_thread_id=settings.tg_admin_thread_id,
             text=(
                 f"⚠️ Instagram auto-publish failed: {e}\n"
                 f"Manual posting instructions sent above."
@@ -653,6 +660,7 @@ async def _try_publish_youtube(bot, post, pub_repo: PublicationRepo) -> None:
 
         await bot.send_message(
             chat_id=settings.tg_admin_chat_id,
+                    message_thread_id=settings.tg_admin_thread_id,
             text=(
                 f"🎬 <b>YouTube Short published!</b>\n"
                 f'<a href="{result.get("platform_url")}">View short</a>\n'
@@ -666,6 +674,7 @@ async def _try_publish_youtube(bot, post, pub_repo: PublicationRepo) -> None:
         log.error("yt_publish_failed", post_id=str(post.id), error=str(e))
         await bot.send_message(
             chat_id=settings.tg_admin_chat_id,
+                    message_thread_id=settings.tg_admin_thread_id,
             text=(
                 f"⚠️ YouTube auto-publish failed: {e}\n"
                 f"Post ID: <code>{str(post.id)[:8]}</code>\n"

@@ -85,6 +85,7 @@ async def refresh_expiring_tokens() -> None:
                     f"Account: {account.account_name or str(account.id)[:8]}\n"
                     f"Error: {e}",
                     parse_mode="HTML",
+                    message_thread_id=settings.tg_admin_thread_id,
                 )
                 await bot.session.close()
             except Exception:

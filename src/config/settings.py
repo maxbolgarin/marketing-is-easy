@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     # --- Telegram ---
     tg_bot_token: str = ""
     tg_admin_chat_id: int = 0
+    tg_admin_thread_id: int | None = None  # message_thread_id for supergroup topics
     tg_channel_id: int = 0
     tg_admin_user_ids: str = ""  # comma-separated
 

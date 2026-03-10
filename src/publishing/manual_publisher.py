@@ -61,6 +61,7 @@ class ManualPublisher:
         log.info("manual_posting_send", post_id=str(post.id), platform=platform)
 
         admin_chat = settings.tg_admin_chat_id
+        thread_id = settings.tg_admin_thread_id
         platform_label = platform.replace("_", " ").title()
 
         # 1. Header message
@@ -68,21 +69,28 @@ class ManualPublisher:
             f"📋 <b>Manual Post Required — {platform_label}</b>\n\n"
             f"Post ID: <code>{str(post.id)[:8]}</code>"
         )
-        await bot.send_message(admin_chat, header, parse_mode="HTML")
+        await bot.send_message(
+            admin_chat, header, parse_mode="HTML", message_thread_id=thread_id,
+        )
 
         # 2. Send media file if present
         if post.media_urls:
             media_path = Path(post.media_urls[0])
             if media_path.exists():
                 if post.media_type == "video":
-                    await bot.send_video(admin_chat, FSInputFile(media_path))
+                    await bot.send_video(
+                        admin_chat, FSInputFile(media_path), message_thread_id=thread_id,
+                    )
                 else:
-                    await bot.send_photo(admin_chat, FSInputFile(media_path))
+                    await bot.send_photo(
+                        admin_chat, FSInputFile(media_path), message_thread_id=thread_id,
+                    )
             else:
                 await bot.send_message(
                     admin_chat,
                     f"⚠️ Media file not found: <code>{media_path}</code>",
                     parse_mode="HTML",
+                    message_thread_id=thread_id,
                 )
 
         # 3. Caption to copy
@@ -91,11 +99,16 @@ class ManualPublisher:
             f"📝 <b>Caption (copy below):</b>\n\n"
             f"<code>{caption[:4000]}</code>"
         )
-        await bot.send_message(admin_chat, caption_msg, parse_mode="HTML")
+        await bot.send_message(
+            admin_chat, caption_msg, parse_mode="HTML", message_thread_id=thread_id,
+        )
 
         # 4. Platform instructions
         instructions = _PLATFORM_INSTRUCTIONS.get(platform, "Post manually on the platform.")
-        await bot.send_message(admin_chat, f"📌 <b>Steps:</b>\n{instructions}", parse_mode="HTML")
+        await bot.send_message(
+            admin_chat, f"📌 <b>Steps:</b>\n{instructions}", parse_mode="HTML",
+            message_thread_id=thread_id,
+        )
 
         # 5. "Mark as Posted" button
         callback = f"manual_posted:{pub_id}" if pub_id else f"manual_posted_post:{post.id}"
@@ -109,6 +122,7 @@ class ManualPublisher:
             f"After posting manually on <b>{platform_label}</b>, click the button below.",
             parse_mode="HTML",
             reply_markup=keyboard,
+            message_thread_id=thread_id,
         )
 
         log.info(

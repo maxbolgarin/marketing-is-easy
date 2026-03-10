@@ -67,6 +67,7 @@ async def publish_post(post_id: uuid.UUID) -> None:
                 confirmation = format_post_published(post, "Telegram", result.get("platform_url"))
                 await bot.send_message(
                     chat_id=settings.tg_admin_chat_id,
+                    message_thread_id=settings.tg_admin_thread_id,
                     text=confirmation,
                     parse_mode="HTML",
                 )
@@ -90,6 +91,7 @@ async def publish_post(post_id: uuid.UUID) -> None:
 
                 await bot.send_message(
                     chat_id=settings.tg_admin_chat_id,
+                    message_thread_id=settings.tg_admin_thread_id,
                     text=f"❌ Scheduled publish failed for <code>{str(post.id)[:8]}</code>:\n{e}",
                     parse_mode="HTML",
                 )
