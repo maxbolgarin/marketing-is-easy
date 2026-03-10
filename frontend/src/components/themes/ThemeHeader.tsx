@@ -8,6 +8,18 @@ import { PLATFORM_LABELS } from "@/lib/constants";
 import type { Theme, ThemeStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+function formatCadenceRule(rule: Record<string, unknown>): string {
+  if (!rule || Object.keys(rule).length === 0) return "—";
+  const freq = rule.frequency as string | undefined;
+  const days = rule.days as string[] | undefined;
+  const time = rule.time as string | undefined;
+  const parts: string[] = [];
+  if (freq) parts.push(freq);
+  if (days?.length) parts.push(days.join(", "));
+  if (time) parts.push(`at ${time}`);
+  return parts.length > 0 ? parts.join(" • ") : JSON.stringify(rule);
+}
+
 const THEME_STATUS_STYLES: Record<ThemeStatus, string> = {
   active: "bg-emerald-950 text-emerald-400",
   paused: "bg-yellow-950 text-yellow-400",
@@ -91,7 +103,7 @@ export default function ThemeHeader({ theme }: ThemeHeaderProps) {
         <div className="flex items-center gap-1.5 text-muted-foreground">
           <CalendarDays className="size-3.5" />
           <span className="text-xs">
-            {theme.cadence_type}: {theme.cadence_rule}
+            {theme.cadence_type}: {formatCadenceRule(theme.cadence_rule ?? {})}
           </span>
         </div>
       </div>
