@@ -92,8 +92,7 @@ clean: ## Remove build artifacts and caches
 
 deploy: ## Pull latest (with submodules) and rebuild all Docker services on VM
 	gitb pl
-	git submodule update --init --recursive
-	dc up -d --build
+	sudo docker compose up -d --build
 
 tunnel: ## Open SSH tunnels for both frontend and API to VM
 	ssh -R 3005:localhost:3005 -R 8000:localhost:8000 deploy@scanorbit.cloud
