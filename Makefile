@@ -98,7 +98,8 @@ tunnel: ## Open SSH tunnels for both frontend and API to VM
 	ssh -R 3005:localhost:3005 -R 8000:localhost:8000 deploy@scanorbit.cloud
 
 tunnel-frontend: ## Open SSH tunnel for frontend (port 3005) to VM
-	ssh -R 3005:localhost:3005 deploy@scanorbit.cloud
-
-tunnel-api: ## Open SSH tunnel for API (port 8000) to VM
-	ssh -R 8000:localhost:8000 deploy@scanorbit.cloud
+	@echo "$(YELLOW)Opening SSH tunnel to production Marketing is Easy...$(RESET)"
+	@echo "  Marketing is Easy will be available at: http://localhost:3005"
+	@echo "  Press Ctrl+C to close the tunnel"
+	@echo ""
+	ssh -N -L 3005:localhost:3005 deploy@scanorbit.cloud
