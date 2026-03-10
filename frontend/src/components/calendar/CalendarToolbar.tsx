@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Filter, X } from "lucide-react";
-import { format, addWeeks, subWeeks } from "date-fns";
+import { format, addWeeks, subWeeks, addMonths, subMonths } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -170,15 +170,31 @@ function FilterDropdown() {
   );
 }
 
+function MonthLabel({ date }: { date: Date }) {
+  return (
+    <span className="text-sm font-medium tabular-nums">
+      {format(date, "MMMM yyyy")}
+    </span>
+  );
+}
+
 export function CalendarToolbar() {
   const { calendarView, setCalendarView, calendarDate, setCalendarDate } = useUIStore();
 
   function gotoPrev() {
-    setCalendarDate(subWeeks(calendarDate, 1));
+    if (calendarView === "month") {
+      setCalendarDate(subMonths(calendarDate, 1));
+    } else {
+      setCalendarDate(subWeeks(calendarDate, 1));
+    }
   }
 
   function gotoNext() {
-    setCalendarDate(addWeeks(calendarDate, 1));
+    if (calendarView === "month") {
+      setCalendarDate(addMonths(calendarDate, 1));
+    } else {
+      setCalendarDate(addWeeks(calendarDate, 1));
+    }
   }
 
   function gotoToday() {
@@ -193,7 +209,7 @@ export function CalendarToolbar() {
           variant="ghost"
           size="icon-sm"
           onClick={gotoPrev}
-          aria-label="Previous week"
+          aria-label={calendarView === "month" ? "Previous month" : "Previous week"}
         >
           <ChevronLeft className="size-4" />
         </Button>
@@ -201,7 +217,7 @@ export function CalendarToolbar() {
           variant="ghost"
           size="icon-sm"
           onClick={gotoNext}
-          aria-label="Next week"
+          aria-label={calendarView === "month" ? "Next month" : "Next week"}
         >
           <ChevronRight className="size-4" />
         </Button>
@@ -214,7 +230,11 @@ export function CalendarToolbar() {
           Today
         </Button>
         <span className="ml-2 hidden sm:block">
-          <WeekRangeLabel date={calendarDate} />
+          {calendarView === "month" ? (
+            <MonthLabel date={calendarDate} />
+          ) : (
+            <WeekRangeLabel date={calendarDate} />
+          )}
         </span>
       </div>
 
@@ -226,7 +246,6 @@ export function CalendarToolbar() {
         <TabsList>
           <TabsTrigger value="week">Week</TabsTrigger>
           <TabsTrigger value="month">Month</TabsTrigger>
-          <TabsTrigger value="list">List</TabsTrigger>
         </TabsList>
       </Tabs>
 

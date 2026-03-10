@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type CalendarView = "week" | "month" | "list";
+export type CalendarView = "week" | "month";
 
 export interface Filters {
   themes: string[];
