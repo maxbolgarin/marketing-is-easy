@@ -58,8 +58,7 @@ export async function apiRequest<T>(
 
   if (response.status === 401) {
     removeToken();
-    window.location.href = "/login";
-    throw new ApiError(401, "Unauthorized — redirecting to login");
+    throw new ApiError(401, "Session expired — please log in again");
   }
 
   if (!response.ok) {

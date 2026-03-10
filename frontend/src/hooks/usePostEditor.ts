@@ -15,7 +15,7 @@ export function usePostEditor() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const { isOpen, postId, activeTab, openEditor, closeEditor, setActiveTab } =
+  const { isOpen, postId, scheduledDate, activeTab, openEditor, closeEditor, setActiveTab } =
     useEditorStore();
 
   // On mount: sync URL → store
@@ -57,13 +57,14 @@ export function usePostEditor() {
   };
 
   // Wrap openEditor — consumers call this instead of the raw store action
-  const handleOpen = (id: string) => {
-    openEditor(id);
+  const handleOpen = (id: string, scheduledDate?: string) => {
+    openEditor(id, scheduledDate);
   };
 
   return {
     isOpen,
     postId,
+    scheduledDate,
     activeTab,
     openEditor: handleOpen,
     closeEditor: handleClose,

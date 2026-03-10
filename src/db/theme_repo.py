@@ -65,6 +65,8 @@ class ThemeRepo:
             base = base.where(Theme.track == track)
         if status:
             base = base.where(Theme.status == status)
+        else:
+            base = base.where(Theme.status != "completed")
 
         count_stmt = select(func.count()).select_from(base.subquery())
         total = (await self.session.execute(count_stmt)).scalar() or 0

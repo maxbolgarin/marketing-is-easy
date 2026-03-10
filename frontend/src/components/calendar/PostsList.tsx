@@ -70,6 +70,7 @@ export function PostsList() {
   });
 
   let posts = postsQuery.data?.items ?? [];
+  const serverTotal = postsQuery.data?.total ?? 0;
 
   // Client-side filter for multi-value filters not supported by API
   if (filters.statuses.length > 1) {
@@ -84,6 +85,8 @@ export function PostsList() {
     posts = posts.filter((p) => p.theme_id && filters.themes.includes(p.theme_id));
   }
 
+  const truncated = hasMultiFilter && serverTotal > (postsQuery.data?.items.length ?? 0);
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-1 pb-2">
@@ -92,6 +95,11 @@ export function PostsList() {
         </h3>
         <span className="text-xs text-muted-foreground">
           {postsQuery.data?.total ?? 0}
+          {truncated && (
+            <span className="text-yellow-400 ml-1" title="Some posts may not be shown due to filter limits">
+              (partial)
+            </span>
+          )}
         </span>
       </div>
 

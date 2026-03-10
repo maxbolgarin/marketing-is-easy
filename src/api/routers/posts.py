@@ -45,7 +45,7 @@ async def _post_response_with_pubs(post, db: AsyncSession) -> PostResponse:
 
 @router.get("", response_model=PaginatedResponse[PostResponse])
 async def list_posts(
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(20, ge=1, le=500),
     offset: int = Query(0, ge=0),
     status_filter: str | None = Query(None, alias="status"),
     theme_id: uuid.UUID | None = None,

@@ -10,19 +10,13 @@ import { useUIStore } from "@/stores/ui";
 export default function Calendar() {
   const calendarView = useUIStore((s) => s.calendarView);
   const setFilters = useUIStore((s) => s.setFilters);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   // Apply URL query params as filters on mount
   useEffect(() => {
     const statusParam = searchParams.get("status");
     if (statusParam) {
       setFilters({ statuses: [statusParam] });
-      // Remove query param so it doesn't persist on navigation
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.delete("status");
-        return next;
-      }, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

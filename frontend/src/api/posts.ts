@@ -8,8 +8,8 @@ export interface PostsParams {
   theme_id?: string;
   limit?: number;
   offset?: number;
-  scheduled_after?: string;
-  scheduled_before?: string;
+  date_from?: string;
+  date_to?: string;
 }
 
 export interface CreatePostData {
@@ -44,6 +44,7 @@ export interface GenerateTextData {
 
 export interface GenerateImageData {
   prompt?: string;
+  media_style?: "ai" | "card";
   generation_params?: Record<string, unknown>;
 }
 

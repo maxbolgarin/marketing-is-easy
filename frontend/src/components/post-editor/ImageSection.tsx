@@ -50,20 +50,27 @@ export default function ImageSection({ post, onUpdate }: ImageSectionProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-1 rounded-lg bg-muted p-0.5 w-fit flex-wrap">
-        {(["none", "upload", "generate", "template"] as ImageMode[]).map((m) => (
-          <button
-            key={m}
-            onClick={() => handleModeChange(m)}
-            className={cn(
-              "rounded-md px-3 py-1 text-xs font-medium capitalize transition-colors",
-              mode === m
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {m}
-          </button>
-        ))}
+        {(["none", "upload", "generate", "template"] as ImageMode[]).map((m) => {
+          const isDisabled = m === "template";
+          return (
+            <button
+              key={m}
+              onClick={() => !isDisabled && handleModeChange(m)}
+              disabled={isDisabled}
+              className={cn(
+                "rounded-md px-3 py-1 text-xs font-medium capitalize transition-colors",
+                mode === m
+                  ? "bg-background text-foreground shadow-sm"
+                  : isDisabled
+                    ? "text-muted-foreground/40 cursor-not-allowed"
+                    : "text-muted-foreground hover:text-foreground",
+              )}
+              title={isDisabled ? "Coming soon" : undefined}
+            >
+              {m}
+            </button>
+          );
+        })}
       </div>
 
       {mode === "none" && (

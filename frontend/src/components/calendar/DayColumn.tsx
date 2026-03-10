@@ -23,9 +23,7 @@ export function DayColumn({ date, posts }: DayColumnProps) {
   const sorted = [...posts].sort(sortByTime);
 
   function handleEmptyClick() {
-    // Opening editor with empty string signals new post creation.
-    // A fuller implementation would pre-fill the scheduled_at with `date`.
-    openEditor("");
+    openEditor("", date.toISOString());
   }
 
   return (

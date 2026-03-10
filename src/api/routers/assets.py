@@ -60,7 +60,7 @@ async def upload_asset(
     file: UploadFile,
     _user: ApiUser = Depends(get_current_user),
 ):
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     upload_dir = Path(settings.media_storage_path) / settings.track / now.strftime("%Y/%m")
     upload_dir.mkdir(parents=True, exist_ok=True)
 

@@ -32,6 +32,8 @@ async def get_calendar(
 
     by_day: dict[str, list] = defaultdict(list)
     for post in posts:
+        if post.scheduled_at is None:
+            continue
         day = post.scheduled_at.strftime("%Y-%m-%d")
         by_day[day].append(PostResponse.model_validate(post))
 

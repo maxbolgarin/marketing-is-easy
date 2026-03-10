@@ -11,6 +11,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import StatusBadge from "@/components/shared/StatusBadge";
+import { DEFAULT_TRACK } from "@/lib/constants";
 import { usePost, useCreatePost } from "@/hooks/usePost";
 import { usePostEditor } from "@/hooks/usePostEditor";
 import type { EditorTab } from "@/stores/editor";
@@ -27,7 +28,7 @@ const TABS: { value: EditorTab; label: string }[] = [
 ];
 
 export default function PostEditorPanel() {
-  const { isOpen, postId, activeTab, openEditor, closeEditor, setActiveTab } =
+  const { isOpen, postId, scheduledDate, activeTab, openEditor, closeEditor, setActiveTab } =
     usePostEditor();
 
   const createPost = useCreatePost();
@@ -38,7 +39,10 @@ export default function PostEditorPanel() {
     if (isOpen && !postId && !creatingRef.current) {
       creatingRef.current = true;
       createPost.mutate(
-        { track: "eu" },
+        {
+          track: DEFAULT_TRACK,
+          scheduled_at: scheduledDate ?? undefined,
+        },
         {
           onSuccess: (post) => {
             openEditor(post.id);
@@ -46,6 +50,7 @@ export default function PostEditorPanel() {
           },
           onError: () => {
             creatingRef.current = false;
+            closeEditor();
           },
         },
       );

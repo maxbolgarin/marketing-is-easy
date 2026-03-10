@@ -51,7 +51,7 @@ export default function Settings() {
           {me ? (
             <>
               <Row label="Username" value={me.username} />
-              {me.email && <Row label="Email" value={me.email} />}
+              {me.display_name && <Row label="Display Name" value={me.display_name} />}
               <Row label="Account ID" value={<span className="font-mono text-xs">{me.id}</span>} />
               <Row
                 label="Status"

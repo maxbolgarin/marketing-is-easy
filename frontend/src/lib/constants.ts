@@ -35,6 +35,8 @@ export const STATUS_COLORS: Record<PostStatus, string> = {
   rejected: "gray",
 };
 
+export const DEFAULT_TRACK = "eu";
+
 export const STATUS_LABELS: Record<PostStatus, string> = {
   draft: "Draft",
   generating: "Generating",
