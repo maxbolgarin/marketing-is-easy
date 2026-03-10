@@ -82,13 +82,17 @@ else
 	docker compose logs -f
 endif
 
+send-envs:
+	scp .env deploy@scanorbit.cloud:/home/deploy/marketing-is-easy/.env
+
 clean: ## Remove build artifacts and caches
 	rm -rf frontend/dist frontend/node_modules/.vite
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true
 
-deploy: ## Pull latest and rebuild all Docker services on VM
+deploy: ## Pull latest (with submodules) and rebuild all Docker services on VM
 	gitb pl
+	git submodule update --init --recursive
 	dc up -d --build
 
 tunnel: ## Open SSH tunnels for both frontend and API to VM
