@@ -33,6 +33,6 @@ export function uploadAsset(file: File): Promise<Asset> {
  * Deletes an asset by its storage path.
  */
 export function deleteAsset(path: string): Promise<void> {
-  const encodedPath = encodeURIComponent(path);
+  const encodedPath = path.split("/").map(encodeURIComponent).join("/");
   return api.del<void>(`/assets/${encodedPath}`);
 }

@@ -65,11 +65,12 @@ export default function ContentTab({ post }: ContentTabProps) {
         <Button
           variant="outline"
           size="sm"
-          disabled={isSending}
-          onClick={() => handleUpdate({ status: "approved" })}
+          disabled={isSending || post.status === "review"}
+          onClick={() => handleUpdate({ status: "review" })}
+          className="gap-1.5"
         >
-          <CheckCheck className="size-3.5" />
-          Mark as Final
+          <Send className="size-3.5" />
+          Send to Review
         </Button>
         <Button
           size="sm"
@@ -77,8 +78,8 @@ export default function ContentTab({ post }: ContentTabProps) {
           onClick={() => approvePost.mutate({ id: post.id })}
           className="gap-1.5"
         >
-          <Send className="size-3.5" />
-          Send to Review
+          <CheckCheck className="size-3.5" />
+          Mark as Final
         </Button>
       </div>
     </div>

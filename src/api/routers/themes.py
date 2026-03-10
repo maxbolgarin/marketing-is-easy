@@ -147,11 +147,9 @@ async def batch_generate(
                 "theme_context": theme.generation_context or "",
             },
             status="draft",
+            theme_id=theme.id,
+            scheduled_at=scheduled_at,
         )
-        post.theme_id = theme.id
-        if scheduled_at:
-            post.scheduled_at = scheduled_at
-        await db.commit()
 
         task_id = await enqueue_task("regenerate_post", {"post_id": str(post.id)})
         created.append({"post_id": str(post.id), "task_id": task_id})

@@ -96,13 +96,9 @@ async def create_post(
         media_type=body.media_type,
         generation_params=body.generation_params,
         status="draft",
+        theme_id=body.theme_id,
+        scheduled_at=body.scheduled_at,
     )
-    if body.theme_id:
-        post.theme_id = body.theme_id
-        await db.commit()
-        await db.refresh(post)
-    if body.scheduled_at:
-        await repo.update_post_schedule(post.id, body.scheduled_at)
     return await _post_response_with_pubs(post, db)
 
 

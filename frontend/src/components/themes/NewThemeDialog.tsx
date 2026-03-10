@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -65,6 +65,10 @@ export default function NewThemeDialog({
     setColor(COLORS[0]);
     setSelectedPlatforms([]);
   }
+
+  // Reset form state whenever the dialog opens
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (open) reset(); }, [open]);
 
   function togglePlatform(p: Platform) {
     setSelectedPlatforms((prev) =>

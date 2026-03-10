@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CalendarClock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,12 +25,23 @@ export default function ScheduleTab({ post }: ScheduleTabProps) {
   const [scheduledAt, setScheduledAt] = useState<string>(
     post.scheduled_at ? toLocalDatetimeString(post.scheduled_at) : "",
   );
+  const isEditingRef = useRef(false);
+
+  // Sync from server when post.scheduled_at changes externally
+  useEffect(() => {
+    if (!isEditingRef.current) {
+      setScheduledAt(
+        post.scheduled_at ? toLocalDatetimeString(post.scheduled_at) : "",
+      );
+    }
+  }, [post.scheduled_at]);
 
   const updatePost = useUpdatePost();
   const isPending = updatePost.isPending;
 
   function handleSchedule() {
     if (!scheduledAt) return;
+    isEditingRef.current = false;
     updatePost.mutate({
       id: post.id,
       data: { scheduled_at: toISOString(scheduledAt) },
@@ -38,6 +49,7 @@ export default function ScheduleTab({ post }: ScheduleTabProps) {
   }
 
   function handleClear() {
+    isEditingRef.current = false;
     setScheduledAt("");
     updatePost.mutate({
       id: post.id,
@@ -79,6 +91,8 @@ export default function ScheduleTab({ post }: ScheduleTabProps) {
           id="schedule-datetime"
           type="datetime-local"
           value={scheduledAt}
+          onFocus={() => { isEditingRef.current = true; }}
+          onBlur={() => { isEditingRef.current = false; }}
           onChange={(e) => setScheduledAt(e.target.value)}
           className="flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 [color-scheme:dark]"
         />

@@ -21,7 +21,7 @@ export function useLogin() {
       login(username, password),
     onSuccess: (data) => {
       setToken(data.access_token);
-      void queryClient.invalidateQueries();
+      void queryClient.invalidateQueries({ queryKey: ["me"] });
     },
   });
 }

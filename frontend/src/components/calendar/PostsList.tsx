@@ -57,8 +57,13 @@ function PostItem({ post }: { post: Post }) {
 export function PostsList() {
   const { filters } = useUIStore();
 
+  const hasMultiFilter =
+    filters.statuses.length > 1 ||
+    filters.platforms.length > 1 ||
+    filters.themes.length > 1;
+
   const postsQuery = usePosts({
-    limit: 100,
+    limit: hasMultiFilter ? 500 : 100,
     status: filters.statuses.length === 1 ? filters.statuses[0] as Post["status"] : undefined,
     platform: filters.platforms.length === 1 ? (filters.platforms[0] as Platform) : undefined,
     theme_id: filters.themes.length === 1 ? filters.themes[0] : undefined,

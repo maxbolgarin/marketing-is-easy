@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
-import { ImageIcon, RefreshCw, Upload, X } from "lucide-react";
+import { ImageIcon, Loader2, RefreshCw, Upload, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useGenerateImage } from "@/hooks/useGeneration";
 import type { Post } from "@/lib/types";
+import { uploadAsset } from "@/api/assets";
 import { cn } from "@/lib/utils";
 import GenerateButton from "./GenerateButton";
 
@@ -24,6 +25,7 @@ export default function ImageSection({ post, onUpdate }: ImageSectionProps) {
 
   const [mode, setMode] = useState<ImageMode>(currentMode);
   const [prompt, setPrompt] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const generateImage = useGenerateImage();
@@ -74,21 +76,38 @@ export default function ImageSection({ post, onUpdate }: ImageSectionProps) {
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => {
+            onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
-              // Upload handled by parent / asset API in a real implementation
-              const objectUrl = URL.createObjectURL(file);
-              onUpdate({ media_type: "image", media_urls: [objectUrl] });
+              setIsUploading(true);
+              try {
+                const asset = await uploadAsset(file);
+                onUpdate({ media_type: "image", media_urls: [asset.url] });
+              } catch {
+                // upload failed silently — user can retry
+              } finally {
+                setIsUploading(false);
+                e.target.value = "";
+              }
             }}
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/20 px-6 py-10 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-muted/40 hover:text-foreground"
+            disabled={isUploading}
+            className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/20 px-6 py-10 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-muted/40 hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Upload className="size-6" />
-            <span>Click to upload image</span>
-            <span className="text-xs">PNG, JPG, WEBP up to 10MB</span>
+            {isUploading ? (
+              <>
+                <Loader2 className="size-6 animate-spin" />
+                <span>Uploading...</span>
+              </>
+            ) : (
+              <>
+                <Upload className="size-6" />
+                <span>Click to upload image</span>
+                <span className="text-xs">PNG, JPG, WEBP up to 10MB</span>
+              </>
+            )}
           </button>
           {imageUrl && <ImagePreview url={imageUrl} onRemove={() => onUpdate({ media_urls: [], media_type: "none" })} />}
         </div>

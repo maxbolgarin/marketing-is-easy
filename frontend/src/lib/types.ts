@@ -108,7 +108,6 @@ export interface Channel {
 }
 
 export interface Asset {
-  id: UUID;
   path: string;
   url: string;
   filename: string;

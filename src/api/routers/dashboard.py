@@ -30,8 +30,12 @@ async def get_stats(
     week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
+    week_end = week_start + timedelta(days=7)
     scheduled_this_week = await repo.count_by_status(
-        ["approved", "scheduled"], date_from=week_start, date_to=now + timedelta(days=7)
+        ["approved", "scheduled"],
+        date_from=week_start,
+        date_to=week_end,
+        date_field="scheduled_at",
     )
     pending_review = await repo.count_by_status(["review"])
     published_this_month = await repo.count_by_status(["published"], date_from=month_start)

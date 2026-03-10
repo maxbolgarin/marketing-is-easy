@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -62,14 +62,18 @@ export default function EditThemeDialog({
     theme.target_platforms,
   );
 
+  const prevOpenRef = useRef(false);
+
   useEffect(() => {
-    if (open) {
+    // Only sync form when dialog opens (transition from closed to open)
+    if (open && !prevOpenRef.current) {
       setName(theme.name);
       setDescription(theme.description ?? "");
       setCadenceType(theme.cadence_type);
       setColor(theme.color);
       setSelectedPlatforms(theme.target_platforms);
     }
+    prevOpenRef.current = open;
   }, [open, theme]);
 
   function togglePlatform(p: Platform) {

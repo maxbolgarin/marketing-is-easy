@@ -26,6 +26,8 @@ class PostRepo:
         media_urls: list[str] | None = None,
         generation_params: dict | None = None,
         status: str = "review",
+        theme_id: uuid.UUID | None = None,
+        scheduled_at: datetime | None = None,
     ) -> Post:
         post = Post(
             track=track,
@@ -39,6 +41,8 @@ class PostRepo:
             media_urls=media_urls,
             generation_params=generation_params or {},
             status=status,
+            theme_id=theme_id,
+            scheduled_at=scheduled_at,
         )
         self.session.add(post)
         await self.session.commit()
@@ -58,6 +62,7 @@ class PostRepo:
         if not post:
             return None
         post.status = status
+        post.updated_at = datetime.now(timezone.utc)
         if approved_by:
             post.approved_by = approved_by
             post.approved_at = datetime.now(timezone.utc)
@@ -96,6 +101,7 @@ class PostRepo:
         if not post:
             return None
         post.scheduled_at = scheduled_at
+        post.updated_at = datetime.now(timezone.utc)
         await self.session.commit()
         await self.session.refresh(post)
         return post
@@ -172,7 +178,7 @@ class PostRepo:
             from src.db.models import PostPublication
             base = base.join(PostPublication, PostPublication.post_id == Post.id).where(
                 PostPublication.platform == platform
-            )
+            ).distinct()
 
         count_stmt = select(func.count()).select_from(base.subquery())
         total = (await self.session.execute(count_stmt)).scalar() or 0
@@ -206,14 +212,16 @@ class PostRepo:
         track: str | None = None,
         date_from: datetime | None = None,
         date_to: datetime | None = None,
+        date_field: str = "created_at",
     ) -> int:
         stmt = select(func.count()).select_from(Post).where(Post.status.in_(statuses))
         if track:
             stmt = stmt.where(Post.track == track)
+        col = getattr(Post, date_field, Post.created_at)
         if date_from:
-            stmt = stmt.where(Post.created_at >= date_from)
+            stmt = stmt.where(col >= date_from)
         if date_to:
-            stmt = stmt.where(Post.created_at <= date_to)
+            stmt = stmt.where(col <= date_to)
         return (await self.session.execute(stmt)).scalar() or 0
 
 

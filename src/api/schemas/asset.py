@@ -10,4 +10,5 @@ class AssetResponse(BaseModel):
     path: str
     url: str
     size: int
-    modified_at: float
+    content_type: str
+    created_at: str
