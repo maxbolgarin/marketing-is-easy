@@ -16,6 +16,8 @@ export default function ContentTab({ post }: ContentTabProps) {
   const updatePost = useUpdatePost();
   const approvePost = useApprovePost();
 
+  const platform = post.publications?.[0]?.platform;
+
   function handleUpdate(data: Parameters<typeof updatePost.mutate>[0]["data"]) {
     updatePost.mutate({ id: post.id, data });
   }
@@ -31,6 +33,7 @@ export default function ContentTab({ post }: ContentTabProps) {
         </h3>
         <TextSection
           post={post}
+          platform={platform}
           onUpdate={(data) => handleUpdate(data)}
         />
       </section>

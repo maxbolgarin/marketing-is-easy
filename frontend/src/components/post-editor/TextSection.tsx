@@ -5,18 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useGenerateText } from "@/hooks/useGeneration";
 import { useUpdatePost } from "@/hooks/usePost";
-import type { Post } from "@/lib/types";
+import type { Platform, Post } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import FormattingToolbar, { wrapSelection } from "./FormattingToolbar";
 import GenerateButton from "./GenerateButton";
 
 type TextMode = "static" | "generated";
 
 interface TextSectionProps {
   post: Post;
+  platform?: Platform;
   onUpdate: (data: Partial<Pick<Post, "text_content" | "text_prompt">>) => void;
 }
 
-export default function TextSection({ post, onUpdate }: TextSectionProps) {
+export default function TextSection({ post, platform, onUpdate }: TextSectionProps) {
   const [mode, setMode] = useState<TextMode>(
     post.text_prompt ? "generated" : "static",
   );
@@ -28,6 +30,8 @@ export default function TextSection({ post, onUpdate }: TextSectionProps) {
   const [localPrompt, setLocalPrompt] = useState(post.text_prompt ?? "");
   const contentFocused = useRef(false);
   const promptFocused = useRef(false);
+  const staticTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const generatedTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Sync server → local only when user is NOT editing
   useEffect(() => {
@@ -163,12 +167,26 @@ export default function TextSection({ post, onUpdate }: TextSectionProps) {
               </div>
 
               {editingGenerated ? (
-                <Textarea
-                  value={editedText}
-                  onChange={(e) => setEditedText(e.target.value)}
-                  className="min-h-[160px] resize-none text-sm"
-                  autoFocus
-                />
+                <div className="flex flex-col">
+                  {platform && (
+                    <FormattingToolbar
+                      platform={platform}
+                      textareaRef={generatedTextareaRef}
+                      value={editedText}
+                      onChange={setEditedText}
+                    />
+                  )}
+                  <Textarea
+                    ref={generatedTextareaRef}
+                    value={editedText}
+                    onChange={(e) => setEditedText(e.target.value)}
+                    className={cn(
+                      "min-h-[160px] resize-none text-sm",
+                      platform && "rounded-t-none",
+                    )}
+                    autoFocus
+                  />
+                </div>
               ) : (
                 <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-sm whitespace-pre-wrap leading-relaxed">
                   {post.text_content}
@@ -187,13 +205,28 @@ export default function TextSection({ post, onUpdate }: TextSectionProps) {
               {wordCount} words
             </span>
           </div>
+          {platform && (
+            <FormattingToolbar
+              platform={platform}
+              textareaRef={staticTextareaRef}
+              value={localContent}
+              onChange={(newValue) => {
+                setLocalContent(newValue);
+                contentFocused.current = true;
+              }}
+            />
+          )}
           <Textarea
+            ref={staticTextareaRef}
             value={localContent}
             onChange={(e) => setLocalContent(e.target.value)}
             onFocus={() => { contentFocused.current = true; }}
             onBlur={handleContentBlur}
             placeholder="Write your post content..."
-            className="min-h-[160px] resize-none text-sm"
+            className={cn(
+              "min-h-[160px] resize-none text-sm",
+              platform && "rounded-t-none",
+            )}
           />
         </div>
       )}
