@@ -2,13 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   approvePost,
+  createPost,
   deletePost,
   getPost,
   publishNow,
   rejectPost,
   updatePost,
 } from "@/api/posts";
-import type { ApprovePostData, UpdatePostData } from "@/api/posts";
+import type { ApprovePostData, CreatePostData, UpdatePostData } from "@/api/posts";
 
 import { queryKeys } from "./queryKeys";
 
@@ -25,6 +26,21 @@ export function usePost(id: string) {
       return status === "draft" || status === "generating" ? 3000 : false;
     },
     enabled: Boolean(id),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// useCreatePost
+// ---------------------------------------------------------------------------
+
+export function useCreatePost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreatePostData) => createPost(data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.posts.all });
+    },
   });
 }
 

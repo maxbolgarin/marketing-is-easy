@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import StatusBadge from "@/components/shared/StatusBadge";
-import { usePost } from "@/hooks/usePost";
+import { usePost, useCreatePost } from "@/hooks/usePost";
 import { usePostEditor } from "@/hooks/usePostEditor";
 import type { EditorTab } from "@/stores/editor";
 import ContentTab from "./ContentTab";
@@ -26,8 +27,30 @@ const TABS: { value: EditorTab; label: string }[] = [
 ];
 
 export default function PostEditorPanel() {
-  const { isOpen, postId, activeTab, closeEditor, setActiveTab } =
+  const { isOpen, postId, activeTab, openEditor, closeEditor, setActiveTab } =
     usePostEditor();
+
+  const createPost = useCreatePost();
+  const creatingRef = useRef(false);
+
+  // Auto-create a draft post when editor opens with no postId
+  useEffect(() => {
+    if (isOpen && !postId && !creatingRef.current) {
+      creatingRef.current = true;
+      createPost.mutate(
+        { track: "eu" },
+        {
+          onSuccess: (post) => {
+            openEditor(post.id);
+            creatingRef.current = false;
+          },
+          onError: () => {
+            creatingRef.current = false;
+          },
+        },
+      );
+    }
+  }, [isOpen, postId]);
 
   const { data: post, isLoading, isError } = usePost(postId ?? "");
 
@@ -76,7 +99,7 @@ export default function PostEditorPanel() {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
-          {isLoading && <EditorSkeleton />}
+          {(isLoading || createPost.isPending) && <EditorSkeleton />}
 
           {isError && (
             <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground px-6 text-center">

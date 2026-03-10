@@ -14,7 +14,7 @@ export interface CreateThemeData {
   status?: ThemeStatus;
   target_platforms: Platform[];
   cadence_type: string;
-  cadence_rule: string;
+  cadence_rule?: Record<string, unknown>;
   start_date?: string;
   end_date?: string;
   generation_context?: string;

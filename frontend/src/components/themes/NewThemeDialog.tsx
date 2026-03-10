@@ -81,7 +81,6 @@ export default function NewThemeDialog({
       description: description.trim() || undefined,
       target_platforms: selectedPlatforms,
       cadence_type: cadenceType,
-      cadence_rule: "",
       color,
       track: "eu",
     });
