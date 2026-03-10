@@ -5,7 +5,7 @@ import { useEditorStore } from "@/stores/editor";
 import { useUIStore } from "@/stores/ui";
 import { usePosts } from "@/hooks/usePosts";
 import { formatDateTime } from "@/lib/date";
-import type { Post } from "@/lib/types";
+import type { Post, Platform } from "@/lib/types";
 
 function PostItem({ post }: { post: Post }) {
   const openEditor = useEditorStore((s) => s.openEditor);
@@ -60,7 +60,7 @@ export function PostsList() {
   const postsQuery = usePosts({
     limit: 100,
     status: filters.statuses.length === 1 ? filters.statuses[0] as Post["status"] : undefined,
-    platform: filters.platforms.length === 1 ? filters.platforms[0] as Post["platform"] : undefined,
+    platform: filters.platforms.length === 1 ? (filters.platforms[0] as Platform) : undefined,
     theme_id: filters.themes.length === 1 ? filters.themes[0] : undefined,
   });
 
