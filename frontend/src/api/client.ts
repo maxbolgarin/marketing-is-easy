@@ -1,4 +1,4 @@
-const BASE_URL: string = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
+const BASE_URL: string = (import.meta.env.VITE_API_URL as string | undefined) ?? "/api";
 
 const TOKEN_KEY = "auth_token";
 

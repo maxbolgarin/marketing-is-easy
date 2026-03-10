@@ -21,17 +21,17 @@ export interface HealthResponse {
 }
 
 export function getSettings(): Promise<SettingsGroup[]> {
-  return api.get<SettingsGroup[]>("/api/settings");
+  return api.get<SettingsGroup[]>("/settings");
 }
 
 export function updateSettings(settings: Record<string, string>): Promise<{ message: string }> {
-  return api.put<{ message: string }>("/api/settings", { settings });
+  return api.put<{ message: string }>("/settings", { settings });
 }
 
 export function deleteSetting(key: string): Promise<{ message: string }> {
-  return api.del<{ message: string }>(`/api/settings/${key}`);
+  return api.del<{ message: string }>(`/settings/${key}`);
 }
 
 export function getHealth(): Promise<HealthResponse> {
-  return api.get<HealthResponse>("/api/health");
+  return api.get<HealthResponse>("/health");
 }
